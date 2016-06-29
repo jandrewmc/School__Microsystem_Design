@@ -1,0 +1,92 @@
+<<<<<<< HEAD
+;J Andrew McCormick
+;Microsystems Summer 2015
+;Homework 0, Part 0
+=======
+>>>>>>> added
+				.MODEL SMALL
+				.186
+				.STACK 100h
+				.DATA
+
+multiplicand	DB		'Enter the Multiplicand: $' 
+multiplier		DB		'Enter the Multiplier: $'
+
+				.CODE
+
+				EXTERN	PutHex : NEAR, GetDec : NEAR
+
+Homework0		PROC
+
+				mov		ax, @data		;setup data segment
+				mov		ds, ax			
+						
+										;Ask the user to enter a multiplicand
+				mov		dx, offset multiplicand
+				mov		ah, 09h 
+				int		21h
+				call	GetDec			
+				mov		bx, ax			;Hold it in bx
+				
+										;Ask the user to enter a multiplier
+				mov		dx, offset multiplier
+				mov		ah, 09h
+				int		21h
+				call	GetDec			;Ends up in ax
+
+
+	;Preconditions: Multiplicand in BX, multiplier in AX
+				call BoothMultiply		;Call procedure for Booths algorithm
+	;Postconditions: High word in DX, low word in AX
+				
+				mov 	bx, ax
+				mov		ax, dx
+				call    PutHex			;Print high word first
+
+				mov		ax, bx
+				call	PutHex			;Print low word second
+				
+				mov		ah, 4ch
+				int		21h
+Homework0		ENDP
+
+BoothMultiply	PROC
+										 
+	;Preconditions: Multiplicand in BX, multiplier in AX
+				
+				mov		cx, 00010h		;initiate counter to 10			
+				mov		dx, 00000h		;set high word to zero
+				clc							
+theLoop:
+				jnc		CarryFlag0		;if the carry flag is 0, go to label
+				jc		CarryFlag1		;if the carry flag is 1, go to label
+CarryFlag0:
+				test	ax, 1			;is low word odd...lsb 1
+				jnz		CF0LSB1			;if lsb is 1, go to label
+				jz		SHIFT			;if lsb is 0, shift bits 
+CF0LSB1:				
+				sub		dx, bx			;if carry flag is 0 and lsb is 1,
+										;subtract multiplicand from high word
+				jmp 	SHIFT			;shift bits
+CarryFlag1:
+				test	ax, 1			;is lsb 1
+				jnz		SHIFT			;if the lsb is 1, shift bits
+				jz		CF1LSB0			;if the lsb is 0, go to label
+CF1LSB0:
+				add		dx, bx			;if carry flag is 1 and lsb is 0
+										;add multiplicand to high word
+				jmp 	SHIFT			;shift bits
+SHIFT:
+				sar		dx, 1			;arithmetic shift on high word, lsb
+										;enters carry flag
+				rcr		ax, 1			;rotate with carry flag right on low word
+				
+				dec		cx				;decrement counter
+				jnz		theLoop			;if counter is not zero, restart loop
+
+				ret						;end procedure
+	;Postconditions: High word of result in DX, Low word of result in AX
+
+BoothMultiply	ENDP
+
+				END		Homework0
